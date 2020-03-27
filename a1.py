@@ -284,8 +284,9 @@ def main():
     cv1.addPrescribedItem(p2)
     #to add money
     
-    cv1.setTotalCost((p1.qtyDispensed * cv1.getRatePerPrescriptionItem(p1.getMedRate)) + (p2.qtyDispensed * cv1.getRatePerPrescriptionItem(p2.getMedRate)))
-    
+    cv1.setTotalCost((p1.qtyDispensed * cv1.getRatePerPrescriptionItem(p1.getMedRate)) + (p2.qtyDispensed * cv1.getRatePerPrescriptionItem(p2.getMedRate) + cv1.getConsultRate()))
+    pv1.setTotalCost((p1.qtyDispensed * pv1.getRatePerPrescriptionItem()) + (p2.qtyDispensed * pv1.getRatePerPrescriptionItem() + pv1.getConsultRate()))
+
     print(p1.qtyDispensed *cv1.getRatePerPrescriptionItem(p1.getMedRate))
     print(p2.qtyDispensed * cv1.getRatePerPrescriptionItem(p2.getMedRate))
     
@@ -293,10 +294,10 @@ def main():
     pv1.addPrescribedItem(p2)
     
     print(cv1)
-    print(cv1.prescribedItemListStr())
+    cv1.prescribedItemListStr()
 
     
     print(pv1)
-    print(pv1.prescribedItemListStr())
+    pv1.prescribedItemListStr()
     
 main()
