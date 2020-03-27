@@ -293,10 +293,10 @@ def main():
     pv1.addPrescribedItem(p2)
     
     print(cv1)
-    print(cv1.prescribedItemListStr())
+    cv1.prescribedItemListStr()
 
     
     print(pv1)
-    print(pv1.prescribedItemListStr())
+    pv1.prescribedItemListStr()
     
 main()
