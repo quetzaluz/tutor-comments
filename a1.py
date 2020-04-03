@@ -4,6 +4,7 @@ Created on Mar 14, 2020
 @author: Sabinas
 '''
 from abc import ABC, abstractmethod
+from datetime import datetime
 #Medication Class
 
 class Medication():
@@ -84,7 +85,7 @@ class PrescribedItem():
     
     @property
     def getMedRate(self):
-        return self._medicine.rateType #calling parent class method
+        return self._medicine.rateType #calling from obj med class
     @property
     def medCode(self):
         return self._medicine.getCode
@@ -112,14 +113,15 @@ class PrescribedItem():
         
 
     def __str__(self):
-        return f'{self.getMed} \n{self.qtyDispensed}mg dispensed at {self._dosage}mg {self._frequencyPerDay} times per day for {self._duration} days'
+        return f'{self.getMed} \n\t{self.qtyDispensed}mg dispensed at {self._dosage}mg {self._frequencyPerDay} times per day for {self._duration} days'
 
 
 
 #clinic class
-class Clinic:
+class Clinic():
     def __init__(self):
         self._medicationList = {}
+        self._patientList = {}
         
     def searchMedicationByCode(self, code):
         if code in self._medicationList.keys():
@@ -135,9 +137,38 @@ class Clinic:
             self._medicationList[medication.getCode] = medication
             
     def medicationStr(self):
+        print(f'Medication List: {len(self._medicationList)}')
         for key in sorted(self._medicationList.keys()): #sort via key
             print(self._medicationList[key])
             
+    def searchPatient(self, patientID):
+        if patientID in self._patientList.keys():
+            return patientID
+        else:
+            return None
+        
+    def addPatient(self, patient):
+        if patient in self._patientList.values():
+            print(f'Patient: {patient.patientID} already added.')
+            return False
+        else:
+            self._patientList[patient.patientID] = patient
+            return True
+        
+    def removePatient(self, patient):
+        if patient in self._patientList.keys():
+            print(f'Patient: {patient.patientID} deleted.')
+            self._patientList.pop(patient)
+        else:
+            return None
+        
+    def patientStr(self):
+        print(f'\nPatient List: {len(self._patientList)}')
+        for key in sorted(self._patientList.keys()):
+            print(self._patientList[key])
+            
+    def __str__(self):
+        return f'Medication List: {len(self._medicationList)}\n {self.medicationStr()}\n\nPatient List: {len(self._patientList)}\n{self.patientStr()}'
             
 #subclass of Medication
 class AgeLimitedMedication(Medication):
@@ -224,6 +255,9 @@ class Visit(ABC):
             return True 
         else:
             return False 
+    
+    def getPrecriptionCost(self, med):
+        return med.qtyDispensed * (self.getRatePerPrescriptionItem(med.getMedRate) * med.getMedRate)
         
     def prescribedItemListStr(self):
         for p in self._prescribedItemList:
@@ -251,19 +285,84 @@ class CorporateVisit(Visit):
         return rate
         
     def __str__(self):
-        return f'ID No: {self._visitID} {self._visitDate} @{self._patientWeight}kg Total: ${self._totalCost} Company: {self._companyRef}'
+        return f'ID No: {self._visitID} {self.visitDate.strftime("%a, %d %b %Y")} @{self._patientWeight}kg Total: ${self._totalCost:.2f} Company: {self._companyRef}\n'
         
 class PrivateVisit(Visit):
-    def __init__(self, visitDate, patientWeight):
-        super().__init__(visitDate, patientWeight)
         
     def getRatePerPrescriptionItem(self):
         rate = 0.1
         return rate
         
     def __str__(self):
-        return f'ID No: {self._visitID} {self._visitDate} @{self._patientWeight}kg Total: ${self._totalCost}'
+        return f'ID No: {self._visitID} {self.visitDate.strftime("%a, %d %b %Y")} @{self._patientWeight}kg Total: ${self._totalCost:.2f}'
+
+class ClinicException (Exception):
+    pass
     
+    
+class Patient():
+    def __init__(self, pID, dob, weight):
+        self._visitList = []
+        self._patientID = pID
+        self._weight = weight
+        self._today_date = datetime.now()
+        self._dateofBirth = dob #to pass datetime obj
+        #exception is raised here.
+        if self._dateofBirth > self._today_date:
+            raise ClinicException("Birth date {} should not be later than today {}".format(dob.strftime("%d %b %Y"), self._today_date.strftime("%d %b %Y")))
+        
+        if self._weight <= 0:
+            raise ClinicException("Invalid weight {}kg!".format(self.weight))
+    #getter
+    @property
+    def patientID(self):
+        return self._patientID
+    
+    @property
+    def dateOfBirth(self):
+        return self._dateofBirth
+    
+    @property
+    def weight(self):
+        return self._weight
+    
+    @weight.setter 
+    def weight(self, newWeight):
+        if newWeight <= 0:
+            raise ClinicException("Invalid weight {}kg!".format(newWeight))
+        else:
+            self._weight = newWeight
+            
+            
+    def visitList(self, fromDate, toDate):
+        self._fromDate = None 
+        self._toDate = None 
+        if self._fromDate is None and self._toDate is None:
+            for x in self._visitList:
+                if self._visitList[x].visitDate() <= self._toDate:
+                    print(x)
+        elif self._fromDate is not None and self._toDate is None:
+            for x in self._visitList:
+                if self._visitList[x].visitDate() >= self._fromDate:
+                    print(x)
+        else:
+            for x in self._visitList:
+                if self._visitList[x].visitDate() >= self._fromDate and self._visitList[x].visitDate() <= self._toDate:
+                    print(x)
+                    
+    def addVisit(self, visit):
+#         self._lastVisit = self._visitList[-1].visitDate
+#         self._diff = self._lastVisit - visit.visitDate
+#         if len(self._visitList) >= 4 and self._diff.days <= 7:
+#             raise ClinicException("This is the fourth visit in a week block")
+#         else:
+            self._visitList.append(visit)
+        
+    def __str__(self):
+        return f'\n{self._patientID} Date of Birth: {self._dateofBirth.strftime("%d %b %Y")} {self._weight}kg\n Visits: {len(self._visitList)}\n'
+        for x in self._visitList:
+            return self._visitList[x].prescribedItemListStr()
+
 def main():
     
 
@@ -276,28 +375,53 @@ def main():
     p1 = PrescribedItem(10, 3, 5, m3)
     p2 = PrescribedItem(4, 3, 5, alm1)
 
-
-
-    cv1 = CorporateVisit('27 March 2020', 65.5, 'C0123')
-    pv1 = PrivateVisit("28 March 2020", 65.5)
+    cv1Date = datetime(2020, 1, 20)
+    pv1Date = datetime(2020, 3, 20)
+    cv1 = CorporateVisit(cv1Date, 65.5, 'C0123')
+    pv1 = PrivateVisit(pv1Date, 65.5)
     cv1.addPrescribedItem(p1)
     cv1.addPrescribedItem(p2)
-    #to add money
-    
-    cv1.setTotalCost((p1.qtyDispensed * cv1.getRatePerPrescriptionItem(p1.getMedRate)) + (p2.qtyDispensed * cv1.getRatePerPrescriptionItem(p2.getMedRate) + cv1.getConsultRate()))
-    pv1.setTotalCost((p1.qtyDispensed * pv1.getRatePerPrescriptionItem()) + (p2.qtyDispensed * pv1.getRatePerPrescriptionItem() + pv1.getConsultRate()))
-
-    print(p1.qtyDispensed *cv1.getRatePerPrescriptionItem(p1.getMedRate))
-    print(p2.qtyDispensed * cv1.getRatePerPrescriptionItem(p2.getMedRate))
-    
     pv1.addPrescribedItem(p1)
     pv1.addPrescribedItem(p2)
     
-    print(cv1)
-    cv1.prescribedItemListStr()
-
+    #to add money
+    cv1.setTotalCost(cv1.getPrecriptionCost(p1) + cv1.getPrecriptionCost(p2) + cv1.getConsultRate())
+    pv1.setTotalCost((p1.qtyDispensed * (pv1.getRatePerPrescriptionItem() * p1.getMedRate)) + (p2.qtyDispensed * (pv1.getRatePerPrescriptionItem() * p2.getMedRate)) + pv1.getConsultRate())
     
-    print(pv1)
-    pv1.prescribedItemListStr()
+#     print(cv1)
+#     cv1.prescribedItemListStr()
+#  
+#     print(pv1)
+#     pv1.prescribedItemListStr()
+
+    p1Date = datetime(2004, 3, 26)
+    p2Date = datetime(1993, 3, 26)
+    p3Date = datetime(2010, 4, 12)
+    p4Date = datetime(2012, 12, 25)
+    patient1 = Patient("T0002", p1Date, 48.4)
+    patient2 = Patient("T0001", p2Date, 65.5)
+    patient3 = Patient("T0003", p3Date, 36.3)
+    patient4 = Patient("T0004", p4Date, 41.8)
+    
+    #adding the visits into Patient class
+    patient2.addVisit(cv1)
+    patient2.addVisit(pv1)
+    
+    #opening Clinic Medication List & patient List
+    clinicMedList = Clinic()
+    clinicPatientList = Clinic()
+    
+    clinicMedList.addMedication(m1)
+    clinicMedList.addMedication(m2)
+    clinicMedList.addMedication(m3)
+    clinicMedList.addMedication(alm1)
+    
+    clinicPatientList.addPatient(patient1)
+    clinicPatientList.addPatient(patient2)
+    clinicPatientList.addPatient(patient3)
+    clinicPatientList.addPatient(patient4)
+    
+    clinicMedList.medicationStr()
+    clinicPatientList.patientStr()
     
 main()
