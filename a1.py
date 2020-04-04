@@ -165,7 +165,7 @@ class Clinic():
     def patientStr(self):
         print(f'\nPatient List: {len(self._patientList)}')
         for key in sorted(self._patientList.keys()):
-            print(self._patientList[key])
+            print(str(self._patientList[key]))
             
     def __str__(self):
         return f'Medication List: {len(self._medicationList)}\n {self.medicationStr()}\n\nPatient List: {len(self._patientList)}\n{self.patientStr()}'
@@ -260,8 +260,10 @@ class Visit(ABC):
         return med.qtyDispensed * (self.getRatePerPrescriptionItem(med.getMedRate) * med.getMedRate)
         
     def prescribedItemListStr(self):
+        str_result = []
         for p in self._prescribedItemList:
-            print(p)
+            str_result.append(str(p))
+        return "\n".join(str_result)
             
     @abstractmethod 
     def getRatePerPrescriptionItem(self):
@@ -359,9 +361,13 @@ class Patient():
             self._visitList.append(visit)
         
     def __str__(self):
-        return f'\n{self._patientID} Date of Birth: {self._dateofBirth.strftime("%d %b %Y")} {self._weight}kg\n Visits: {len(self._visitList)}\n'
-        for x in self._visitList:
-            return self._visitList[x].prescribedItemListStr()
+        str_result = [
+            f'{self._patientID} Date of Birth: {self._dateofBirth.strftime("%d %b %Y")}',
+            f'{self._weight}kg\nVisits: {len(self._visitList)}\n'
+        ]
+        for visit in self._visitList:
+            str_result.append(visit.prescribedItemListStr())
+        return "\n".join(str_result)
 
 def main():
     
